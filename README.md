@@ -1,14 +1,15 @@
 # code-game-challenge
-**Note: work in progress!**
 
 A simple "Code Game Challanges" core.
 
-Typical usage:
+#### Typical usage:
+
 ```
 var rules = new Rules();
 rules.initWorld = function(world) {}
-rules.updateWorld = functin(world) {}
+rules.addPlayer = functin(world) {}
 rules.movePlayer = function(world, playerID, intent) {}
+rules.updateWorld = functin(world) {}
 // ...
 
 var game = new Game(rules);
@@ -19,3 +20,4 @@ var game_record = game.run(4000);
 // game_record = [ { world: object, bots: [ { id: int, offline: bool } ] }, ... ]
 // game_record.result = rules.getResult(world)
 ```
+Complete *Rock-Paper-Scissors* example under examples/rps_game.js

@@ -169,7 +169,6 @@ Game.prototype.addStrategy = function (strategy_code, id) {
     this.bots[id] = {
         id:         id,
         strategy:   strategy,
-        error:      strategy.last_error,
     };
 };
 
@@ -183,7 +182,6 @@ Game.prototype.init = function (options) {
     game.rules.initWorld(world);
     game.bots.forEach(function (bot) {
         var init_intent = bot.strategy.init(clone(API), game.timeouts.init);
-        bot.error = bot.strategy.last_error;
         game.rules.initPlayer(world, bot.id, init_intent);
     });
 
@@ -200,7 +198,7 @@ Game.prototype.tick = function (world, shuffle_bots) {
     }
 
     game.bots.forEach(function (bot) {
-        if (bot.error) {
+        if (bot.strategy.last_error) {
             return;
         }
 
@@ -209,9 +207,8 @@ Game.prototype.tick = function (world, shuffle_bots) {
         _world.myID = bot.id;
 
         var move_data = bot.strategy.move(_world, _API, game.timeouts.move);
-        bot.error = bot.strategy.last_error;
 
-        if (!bot.error) {
+        if (!bot.strategy.last_error) {
             game.rules.movePlayer(world, bot.id, move_data);
         }
     });
@@ -234,9 +231,11 @@ Game.prototype.run = function (options) {
         record.push({
             world: clone(world),
             offline: game.bots.reduce(function(offline, bot) {
-                offline[bot.id] = typeof bot.error !== 'undefined';
+                if (typeof bot.strategy.last_error !== 'undefined') {
+                    offline.push(bot.id);
+                }
                 return offline;
-            }, {}),
+            }, []),
         });
     }
 

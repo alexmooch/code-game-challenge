@@ -81,7 +81,7 @@ for (var i = 0; i < 2; ++i) {
 
 // Run Game
 
-var record = game.run(4000, { shuffle_bots: false });
+var record = game.run({ticks: 4000, shuffle_bots: false });
 var result = record.result;
 
 console.log('\nWinner: ' + result.winner + '\nScore:  ' + result.score[0] +

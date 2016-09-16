@@ -180,16 +180,16 @@ Game.prototype.addStrategy = function (strategy_code, id) {
         return strategy.last_error;
     }
 
-    id = id || id === 0 ? 0 : this.bots.length;
+    id = typeof id !== 'undefined' ? id : this.bots.length;
     this.bots[id] = {
         id:         id,
         strategy:   strategy,
         offline:    false,
     };
-    // console.log(this.bots[id]);
 };
 
 Game.prototype.tick = function (world, shuffle_bots) {
+    world = world || {};
     var game = this;
     var API = game.rules.getAPI();
 
@@ -210,7 +210,7 @@ Game.prototype.tick = function (world, shuffle_bots) {
         try {
             move_data = bot.strategy.move(_world, _API, game.timeouts.move);
         } catch (e) {
-            // console.error(e);
+            console.error(e);
             bot.offline = true;
             return;
         }
@@ -223,7 +223,7 @@ Game.prototype.tick = function (world, shuffle_bots) {
 
 Game.prototype.run = function (options) {
     options = options || {};
-    var ticks = options.ticks || options.ticks === 0 ? 0 : 1000;
+    var ticks = typeof options.ticks !== 'undefined' ? options.ticks : 1000;
     var shuffle_bots = !!options.shuffle_bots;
 
     var game = this;

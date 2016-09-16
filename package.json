@@ -1,5 +1,5 @@
 {
-  "name": "code-game-challenge",
+  "name": "cgc",
   "version": "0.1.0",
   "description": "A simple \"Code Game Challenges\" core.",
   "main": "cgc.js",

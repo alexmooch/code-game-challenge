@@ -173,18 +173,11 @@ Game.prototype.addStrategy = function (strategy_code, id) {
     var Runner = this.Runner;
     var strategy = new Runner(strategy_code, this.timeouts.compile);
 
-    if (strategy.last_error) {
-        // FIXME: returning "Error or nothing" doesn't seems like an obvious
-        // behavior...
-
-        return strategy.last_error;
-    }
-
     id = typeof id !== 'undefined' ? id : this.bots.length;
     this.bots[id] = {
         id:         id,
         strategy:   strategy,
-        offline:    false,
+        error:      strategy.last_error,
     };
 };
 
@@ -198,24 +191,20 @@ Game.prototype.tick = function (world, shuffle_bots) {
     }
 
     game.bots.forEach(function (bot) {
-        if (bot.offline) {
+        if (bot.error) {
             return;
         }
 
-        var move_data = {};
         var _API = clone(API);
         var _world = clone(world);
         _world.myID = bot.id;
 
-        try {
-            move_data = bot.strategy.move(_world, _API, game.timeouts.move);
-        } catch (e) {
-            console.error(e);
-            bot.offline = true;
-            return;
-        }
+        var move_data = bot.strategy.move(_world, _API, game.timeouts.move);
+        bot.error = bot.strategy.last_error;
 
-        game.rules.movePlayer(world, bot.id, move_data);
+        if (!bot.error) {
+            game.rules.movePlayer(world, bot.id, move_data);
+        }
     });
 
     game.rules.updateWorld(world);
@@ -233,13 +222,9 @@ Game.prototype.run = function (options) {
 
     game.rules.initWorld(world);
     game.bots.forEach(function (bot) {
-        try {
-            var init_data = bot.strategy.init(clone(API), game.timeouts.init);
-            game.rules.initPlayer(world, bot.id, init_data);
-        } catch (e) {
-            console.error(e);
-            bot.offline = true;
-        }
+        var init_data = bot.strategy.init(clone(API), game.timeouts.init);
+        bot.error = bot.strategy.last_error;
+        game.rules.initPlayer(world, bot.id, init_data);
     });
 
     while (ticks-- > 0) {
@@ -247,7 +232,7 @@ Game.prototype.run = function (options) {
         record.push({
             world: clone(world),
             offline: game.bots.reduce(function(offline, bot) {
-                offline[bot.id] = bot.offline;
+                offline[bot.id] = typeof bot.error !== 'undefined';
                 return offline;
             }, {}),
         });

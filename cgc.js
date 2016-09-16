@@ -110,44 +110,36 @@ function VMStrategyRunner(strategy_code, timeout) {
 
 VMStrategyRunner.prototype = new StrategyRunner();
 
-VMStrategyRunner.prototype.init = function (API, timeout) {
-    delete this.last_error;
-    try {
-        var runner = this;
-        API && Object.keys(API).forEach(function (property) {
+VMStrategyRunner.prototype._run = function (code, API, world, timeout) {
+    if (this.last_error) {
+        return;
+    }
+
+    var runner = this;
+    runner.context.world = world;
+    if (typeof API === 'object') {
+        Object.keys(API).forEach(function (property) {
             runner.context[property] = API[property];
         });
+    }
 
-        return vm.runInContext('strategy.init()', this.context, {
-                timeout: timeout,
-                displayErrors: false,
-            }
-        ) || {};
+    try {
+        return vm.runInContext(code, this.context, {
+            timeout: timeout,
+            displayErrors: false,
+        }) || {};
     } catch (e) {
         this.last_error = e;
         // return;
     }
 }
 
+VMStrategyRunner.prototype.init = function (API, timeout) {
+    return this._run('strategy.init()', API, undefined, timeout);
+}
+
 VMStrategyRunner.prototype.move = function (world, API, timeout) {
-    delete this.last_error;
-
-    var runner = this;
-    runner.context.world = world;
-    API && Object.keys(API).forEach(function (property) {
-        runner.context[property] = API[property];
-    });
-
-    try {
-        return vm.runInContext('strategy.move(world)', this.context, {
-                timeout: timeout,
-                displayErrors: false,
-            }
-        ) || {};
-    } catch (e) {
-        this.last_error = e;
-        return;
-    }
+    return this._run('strategy.move(world)', API, world, timeout);
 }
 
 

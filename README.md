@@ -9,7 +9,7 @@ const CGC = require('cgc');
 
 var rules = new CGC.Rules();
 rules.initWorld = function(world) {}
-rules.initPlayer = functin(world, playerID, init_intent) {}
+rules.initPlayer = function(world, playerID, init_intent) {}
 rules.movePlayer = function(world, playerID, move_intent) {}
 rules.updateWorld = functin(world) {}
 // ...

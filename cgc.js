@@ -1,5 +1,4 @@
 const clone = require('clone');
-// const util = require('util');
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -158,7 +157,8 @@ VMStrategyRunner.prototype.move = function (world, API, timeout) {
 
 
 function Game(rules, RunnerClass) {
-    this.Runner = RunnerClass || VMStrategyRunner;
+    this.Runner = RunnerClass || typeof VMStrategyRunner !== 'undefined' ?
+        VMStrategyRunner : StrategyRunner;
     this.timeouts = {
         compile:    1000,
         init:       500,
@@ -180,6 +180,23 @@ Game.prototype.addStrategy = function (strategy_code, id) {
         error:      strategy.last_error,
     };
 };
+
+Game.prototype.init = function (options) {
+    options = options || {};
+
+    var game = this;
+    var world = {};
+    var API = game.rules.getAPI();
+
+    game.rules.initWorld(world);
+    game.bots.forEach(function (bot) {
+        var init_intent = bot.strategy.init(clone(API), game.timeouts.init);
+        bot.error = bot.strategy.last_error;
+        game.rules.initPlayer(world, bot.id, init_intent);
+    });
+
+    return world;
+}
 
 Game.prototype.tick = function (world, shuffle_bots) {
     world = world || {};
@@ -216,19 +233,12 @@ Game.prototype.run = function (options) {
     var shuffle_bots = !!options.shuffle_bots;
 
     var game = this;
-    var world = {};
     var record = [];
     var API = game.rules.getAPI();
-
-    game.rules.initWorld(world);
-    game.bots.forEach(function (bot) {
-        var init_data = bot.strategy.init(clone(API), game.timeouts.init);
-        bot.error = bot.strategy.last_error;
-        game.rules.initPlayer(world, bot.id, init_data);
-    });
+    var world = game.init();
 
     while (ticks-- > 0) {
-        game.tick(world, options.shuffle_bots);
+        game.tick(world, shuffle_bots);
         record.push({
             world: clone(world),
             offline: game.bots.reduce(function(offline, bot) {

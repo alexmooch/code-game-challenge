@@ -1,5 +1,5 @@
-const CGC = require('../cgc');
-const API = require('./rps_api');
+const CGC = require('../../cgc');
+const API = require('./api');
 const fs = require('fs');
 const path = require('path');
 
@@ -69,7 +69,7 @@ var game = new CGC.Game(rps);
 
 // Add bots
 
-const strategy_path = path.join(__dirname, 'rps_strategy.js');
+const strategy_path = path.join(__dirname, 'strategy.js');
 const strategy_code = fs.readFileSync(strategy_path);
 
 for (var i = 0; i < 2; ++i) {

@@ -18,5 +18,9 @@
   "homepage": "https://github.com/alexmooch/code-game-challenge#readme",
   "dependencies": {
     "clone": "^1.0.2"
+  },
+  "optionalDependencies": {
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8"
   }
 }

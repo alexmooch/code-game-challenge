@@ -22,4 +22,4 @@ var game_record = game.run({ ticks: 4000 });
 // game_record = [ { world: object, offline: [ bot_id, ... ] }, ... ]
 // game_record.result = rules.getResult(world)
 ```
-Complete *Rock-Paper-Scissors* example see under examples/rps_game.js
+Complete *Rock-Paper-Scissors* example see under examples/rps/game.js

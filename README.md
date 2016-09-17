@@ -19,7 +19,14 @@ game.addStrategy('var Strategy = { init: function() {}, move: function(world) {}
 // ...
 
 var game_record = game.run({ ticks: 4000 });
-// game_record = [ { world: object, offline: [ bot_id, ... ] }, ... ]
-// game_record.result = rules.getResult(world)
+/*
+    game_record = {
+        states: [ {
+            world: object,
+            offline: [ bot_id, ... ]
+        }, ... ],
+        result = rules.getResult(world)
+    };
+*/
 ```
 Complete *Rock-Paper-Scissors* example see under examples/rps/game.js

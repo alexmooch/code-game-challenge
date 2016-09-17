@@ -60,6 +60,10 @@ Rules.fromObject = function (object) {
 
 function StrategyRunner(strategy) {
     // this.strategy = strategy;
+
+    // NOTE: Any possible exception thrown by strategy must be catched and
+    // saved under this.last_error
+    // See VMStrategyRunner as example below
 }
 
 StrategyRunner.prototype.init = function (API, world, timeout) {
@@ -67,6 +71,7 @@ StrategyRunner.prototype.init = function (API, world, timeout) {
 
     // NOTE: Should return an empty object if strategy.init() returned nothing
     // but didn't crash, undefined otherwise
+    // See VMStrategyRunner as example below
 }
 
 StrategyRunner.prototype.move = function (API, world, timeout) {
@@ -74,6 +79,7 @@ StrategyRunner.prototype.move = function (API, world, timeout) {
 
     // NOTE: Should return an empty object if strategy.move() returned nothing
     // but didn't crash, undefined otherwise
+    // See VMStrategyRunner as example below
 }
 
 
@@ -222,13 +228,13 @@ Game.prototype.run = function (options) {
     var shuffle_bots = !!options.shuffle_bots;
 
     var game = this;
-    var record = [];
+    var record = { states: [] };
     var API = game.rules.getAPI();
     var world = game.init();
 
     while (ticks-- > 0) {
         game.tick(world, shuffle_bots);
-        record.push({
+        record.states.push({
             world: clone(world),
             offline: game.bots.reduce(function(offline, bot) {
                 if (typeof bot.strategy.last_error !== 'undefined') {

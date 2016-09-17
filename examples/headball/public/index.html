@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Headball Example</title>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <button onclick="startGame()">Start game!</button>
+    <script>
+        function startGame () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/game', true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 200) {
+                    console.log(
+                        'got response:', JSON.parse(xhr.responseText).result
+                    );
+                } else {
+                    console.log(
+                        'got error, status:',
+                        xhr.status,
+                        'message:',
+                        xhr.responseText
+                    );
+                }
+            }
+
+            var strategies = {
+                first: 'random.js',
+                second: 'random.js',
+            };
+
+            xhr.send(JSON.stringify(strategies));
+        }
+    </script>
+</body>
+</html>

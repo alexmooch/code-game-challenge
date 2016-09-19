@@ -87,6 +87,7 @@ StrategyRunner.prototype.move = function (API, world, timeout) {
 /// The VMStrategyRunner class ////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+
 const vm = require('vm');
 
 function VMStrategyRunner(strategy_code, timeout) {
@@ -258,6 +259,4 @@ Game.prototype.run = function (options) {
 
 module.exports.Rules = Rules;
 module.exports.Game  = Game;
-
-
-// TEST
+module.exports.StrategyRunner = StrategyRunner;

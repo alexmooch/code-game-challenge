@@ -87,5 +87,5 @@ var result = record.result;
 console.log('\nWinner: ' + result.winner + '\nScore:  ' + result.score[0] +
     ' : ' + result.score[1] + ' (' + result.score[2] + ' draw)');
 
-const record_filename = path.join(__dirname, '.record.json');
+const record_filename = path.join(__dirname, 'record.json');
 fs.writeFile(record_filename, JSON.stringify(record, null, 2));

@@ -1,18 +1,22 @@
 const CGC = require('../../cgc');
 const rules = require('./rules');
 
-module.exports = function (first, second, opts) {
+module.exports = function(strategies, opts) {
     var game = new CGC.Game(rules);
 
-    game.addStrategy(first);
-    game.addStrategy(second);
-
+    var bots = game.bots;
     var err = null;
-    game.bots.forEach(function (bot, id) {
-        err = err || bot.strategy.last_error && (
-            'Strategy [' + id + '] cannot be run: ' +
-                bot.strategy.last_error.message
-        );
+    var id = 0;
+
+    strategies.forEach(function(strategy) {
+        game.addStrategy(strategy);
+
+        if (!err && bots[id].strategy.last_error) {
+            err = 'Strategy [' + id + '] cannot be run: ' +
+                    bots[id].strategy.last_error.message;
+        }
+
+        ++id;
     });
 
     return err || game.run(opts);

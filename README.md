@@ -11,7 +11,7 @@ var rules = new CGC.Rules();
 rules.initWorld = function(world) {}
 rules.initPlayer = function(world, playerID, init_intent) {}
 rules.movePlayer = function(world, playerID, move_intent) {}
-rules.updateWorld = functin(world) {}
+rules.updateWorld = function(world) {}
 // ...
 
 var game = new CGC.Game(rules);

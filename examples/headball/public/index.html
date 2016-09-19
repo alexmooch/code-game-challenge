@@ -3,38 +3,148 @@
 <head>
     <title>Headball Example</title>
     <meta charset="utf-8"/>
+    <script>
+        function ajax(path, method, data, headers) {
+            return new Promise(function(resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(method || 'GET', path || '/', true);
+
+                if (headers && typeof headers === 'object') {
+                    Object.keys(headers).forEach(function(name) {
+                        xhr.setRequestHeader(name, headers[name]);
+                    });
+                }
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState != 4) return;
+                    if (xhr.status === 0 || xhr.status === 200) {
+                        resolve(xhr.responseText);
+                    } else {
+                        reject(new Error(xhr.status + ': ' + xhr.statusText));
+                    }
+                }
+
+                xhr.send(data || null);
+            });
+        }
+    </script>
 </head>
 <body>
+    <div class="firstStrategy" style="float: left; width: 28%; height: 600px">
+        <select id="first" style="width: 90%; margin-bottom: 10px"></select>
+        <br>
+        <textarea id="firstText" style="width: 90%; height: 90%; resize: none"></textarea>
+    </div>
+    <div class="secondStrategy" style="float: left; width: 28%; height: 600px">
+        <select id="second" style="width: 90%; margin-bottom: 10px"></select>
+        <br>
+        <textarea id="secondText" style="width: 90%; height: 90%; resize: none"></textarea>
+    </div>
+    <div class="canvas" style="float: left; width: 44%">
+        <canvas id="headball" width="800" height="600" style="background: #AAA"></canvas>
+    </div>
+    <!-- <div style="clear: both"></div> -->
+    <br>
     <button onclick="startGame()">Start game!</button>
+
     <script>
-        function startGame () {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/game', true);
-            xhr.setRequestHeader("Content-Type", "application/json");
+        function render(state, canvas) {
+            var w = state.world;
+            var ctx = canvas.getContext('2d');
 
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState != 4) return;
-                if (xhr.status == 200) {
-                    console.log(
-                        'got response:', JSON.parse(xhr.responseText).result
-                    );
-                } else {
-                    console.log(
-                        'got error, status:',
-                        xhr.status,
-                        'message:',
-                        xhr.responseText
-                    );
-                }
-            }
+            ctx.fillStyle = '#55AAFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            var strategies = {
-                first: 'random.js',
-                second: 'random.js',
-            };
+            ctx.fillStyle = '#CC9922';
+            ctx.fillRect(0, w.HEIGHT - 2 * w.PLAYER_RAIDUS, w.WIDTH, w.HEIGHT);
 
-            xhr.send(JSON.stringify(strategies));
+            w.players.forEach(function(player, id) {
+                ctx.fillStyle = id in state.offline ? 'gray' : 'green';
+                ctx.beginPath();
+                ctx.arc(player.position.x, w.HEIGHT - w.PLAYER_RAIDUS - player.position.y, player.radius, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            var ball = w.ball;
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(ball.position.x, w.HEIGHT - w.PLAYER_RAIDUS - ball.position.y, ball.radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.strokeStyle = 'black';
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 42px sans-serif';
+
+            ctx.fillText('' + w.score[0], w.WIDTH / 4, 20);
+            ctx.fillText('' + w.score[1], 3 * w.WIDTH / 4, 20);
+
+            ctx.fillText('' + w.players[0].name, w.WIDTH / 4, 70);
+            ctx.fillText('' + w.players[1].name, 3 * w.WIDTH / 4, 70);
+
+            ctx.textBaseline = 'bottom';
+            ctx.textAlign = 'right';
+            ctx.font = '18px sans-serif';
+            ctx.fillText('Tick: ' + w.currentTick, w.WIDTH - 10, w.HEIGHT - 5);
         }
+
+        function gameLoop(record) {
+            var i = 0;
+            var canvas = document.getElementById('headball');
+
+            (function _render() {
+                if (i >= record.states.length) return;
+
+                requestAnimationFrame(_render);
+                render(record.states[i++], canvas);
+            })();
+        }
+
+        function startGame() {
+            ajax('/game', 'POST', JSON.stringify({
+                first:  document.getElementById('firstText').value,
+                second: document.getElementById('secondText').value,
+            }), {
+                'Content-Type': 'application/json'
+            }).then(function(record) {
+                gameLoop(JSON.parse(record));
+            });
+        }
+
+        var strategies = {};
+        var first = document.getElementById('first');
+        var second = document.getElementById('second');
+
+        function updateText(select) {
+            document.getElementById(select.id + 'Text').value = strategies[select.value];
+        }
+
+        first.addEventListener('change', function() {
+            updateText(first);
+        }, false);
+
+        second.addEventListener('change', function() {
+            updateText(second);
+        }, false);
+
+        ['Empty', 'Jump', 'Basic'].forEach(function(name, id) {
+            ajax('/strategy/' + name.toLowerCase()).then(function(strategy) {
+                strategies[name] = strategy;
+
+                var option_f = document.createElement('option');
+                var option_s = document.createElement('option');
+
+                option_f.text = name;
+                option_s.text = name;
+
+                first.options.add(option_f, id);
+                second.options.add(option_s, id);
+
+                updateText(first);
+                updateText(second);
+            });
+        });
     </script>
 </body>
 </html>

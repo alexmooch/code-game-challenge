@@ -87,6 +87,7 @@ rules.initWorld = function(world) {
     world.BALL_RAIDUS = 50;
     world.BALL_FREEZE_TIME = 100;
     world.PLAYER_RAIDUS = 30;
+    world.PLAYER_MAX_SPEED = 4;
     world.MAX_TOUCHES = 2;
 
     world.currentTick = 1;
@@ -129,7 +130,8 @@ rules.movePlayer = function(world, playerID, intent) {
     }
 
     if (intent.action === API.Action.MOVE) {
-        player.speed.x = clamp(intent.x_speed || 0, -1, 1);
+        var s = world.PLAYER_MAX_SPEED;
+        player.speed.x = clamp(intent.x_speed || 0, -s, s);
     }
 }
 
@@ -145,7 +147,6 @@ rules.updateWorld = function(world) {
     const GRAVITY = 0.4;
     const AIR_RESISTANCE = 0.02;
     const SPEED_LOSS = 0.5;
-    const SPEED_KOEFF = 4;
 
     ++w.currentTick;
 
@@ -156,7 +157,7 @@ rules.updateWorld = function(world) {
 
         if (player.position.y === player.radius) {
             player.position.x = clamp(
-                player.position.x + SPEED_KOEFF * player.speed.x,
+                player.position.x + player.speed.x,
                 shift + player.radius,
                 shift + w.WIDTH / 2 - player.radius
             );

@@ -127,11 +127,27 @@
 
             var GROUND = w.HEIGHT - w.PLAYER_RAIDUS;
 
-            ctx.fillStyle = '#55AAFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = '#FFCC00';
+            ctx.fillStyle = '#FC0';
             ctx.fillRect(0, w.HEIGHT - 2 * w.PLAYER_RAIDUS, w.WIDTH, w.HEIGHT);
+
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'square';
+
+            // ctx.strokeStyle = '#ffc14d'
+            // ctx.beginPath();
+            // ctx.moveTo(0, canvas.height - w.PLAYER_RAIDUS);
+            // ctx.lineTo(canvas.width, canvas.height - w.PLAYER_RAIDUS);
+            // ctx.stroke();
+
+            var offset = 0.5 * w.PLAYER_RAIDUS;
+            ctx.strokeStyle = 'orange';
+            ctx.beginPath();
+            ctx.moveTo(w.WIDTH / 2 - offset, canvas.height);
+            ctx.lineTo(w.WIDTH / 2 + offset, canvas.height - 2 * w.PLAYER_RAIDUS);
+            ctx.stroke();
+
+            ctx.fillStyle = '#5AF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height - 2 * w.PLAYER_RAIDUS);
 
             var ball = w.ball;
             ctx.fillStyle = '#F21';
@@ -151,8 +167,8 @@
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 42px sans-serif';
 
-                ctx.fillText('' + w.score[id], id * w.WIDTH / 2 +  w.WIDTH / 4, 25);
-                ctx.fillText('' + player.name, id * w.WIDTH / 2 +  w.WIDTH / 4, 70);
+                ctx.fillText('' + w.score[id], id * w.WIDTH / 2 +  w.WIDTH / 4, 30);
+                ctx.fillText('' + player.name, id * w.WIDTH / 2 +  w.WIDTH / 4, 80);
 
                 ctx.font = 'bold 36px sans-serif';
                 ctx.fillText('' + player.touchesLeft, player.position.x, GROUND - player.position.y);
@@ -170,13 +186,18 @@
             var i = 0, cd = 0;
             var canvas = document.getElementById('headball');
 
-            if (_id) cancelAnimationFrame(_id);
+            if (_id) {
+                cancelAnimationFrame(_id);
+            }
 
             (function _render() {
-                if (i >= record.states.length) return;
+                if (i >= record.states.length) {
+                    console.log(i);
+                    return;
+                }
 
                 _id = requestAnimationFrame(_render);
-                if (cd === 0){
+                if (cd === 0) {
                     render(record.states[i++], canvas);
 
                     if (i < record.states.length) {

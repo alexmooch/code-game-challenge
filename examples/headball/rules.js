@@ -6,7 +6,7 @@ function clamp(value, min, max) {
 }
 
 function resolveCollision(player, ball) {
-    const RESTITUTION = 0.35;
+    const RESTITUTION = 0.25;
 
     d = ball.position.sub(player.position);
     distance_squared = d.dot(d);
@@ -23,15 +23,13 @@ function resolveCollision(player, ball) {
     normal = d.div(distance); // ncoll
     penetration = radii_sum - distance; // dcoll
 
-    // imp = 0;
-    // imb = 1;
+    imp = 0;
+    imb = 1;
 
-    // separation_vec = normal.mul(penetration / (imp + imb));
-    separation_vec = normal.mul(penetration);
+    separation_vec = normal.mul(penetration / (imp + imb));
 
-    // player.position = player.position.sub(separation_vec * imp);
-    // ball.position = ball.position.add(separation_vec * imb);
-    ball.position = ball.position.add(separation_vec);
+    player.position = player.position.sub(separation_vec.mul(imp));
+    ball.position = ball.position.add(separation_vec.mul(imb));
 
     combined_velocity = ball.speed.sub(player.speed); // vcoll
     impact_speed = combined_velocity.dot(normal); // vn
@@ -41,16 +39,13 @@ function resolveCollision(player, ball) {
         return true;
     }
 
-    // impulse = -(1 + RESTITUTION) * impact_speed / (imp + imb);
-    impulse = -(1 + RESTITUTION) * impact_speed;
+    impulse = -(1 + RESTITUTION) * impact_speed / (imp + imb);
     impulse_vector = normal.mul(impulse);
 
-    // a bit of randomnnes ;)
     impulse_vector = impulse_vector.rotate(Math.random() * Math.PI / 180);
 
-    // player.speed = player.speed.sub(impulse_vector * imp);
-    // ball.speed = ball.speed.add(impulse_vector * imb);
-    ball.speed = ball.speed.add(impulse_vector);
+    player.speed = player.speed.sub(impulse_vector.mul(imp));
+    ball.speed = ball.speed.add(impulse_vector.mul(imb));
 
     return true;
 }
@@ -107,6 +102,8 @@ rules.initWorld = function(world) {
         )
     );
     world.ball.freeze_time = world.BALL_FREEZE_TIME;
+
+    rules._justTouched = [false, false];
 }
 
 rules.initPlayer = function(world, playerID, name) {
@@ -210,11 +207,14 @@ rules.updateWorld = function(world) {
     // Check collisions
 
     w.players.forEach(function(player, id) {
-        if (resolveCollision(player, ball)) {
+        if (resolveCollision(player, ball) && !rules._justTouched[id]) {
+            rules._justTouched[id] = true;
             if (--player.touchesLeft < 0) {
                 rules.winner = 1 - id;
             }
             w.players[1 - id].touchesLeft = w.MAX_TOUCHES;
+        } else {
+            rules._justTouched[id] = false;
         }
     });
 }

@@ -3,6 +3,14 @@
 <head>
     <title>Headball Example</title>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://yui.yahooapis.com/combo?pure/0.6.0/base-min.css&pure/0.6.0/grids-min.css&pure/0.6.0/grids-responsive-old-ie-min.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="http://yui.yahooapis.com/combo?pure/0.6.0/base-min.css&pure/0.6.0/grids-min.css&pure/0.6.0/grids-responsive-min.css">
+    <!--<![endif]-->
+
     <script>
         function ajax(path, method, data, headers) {
             return new Promise(function(resolve, reject) {
@@ -28,24 +36,89 @@
             });
         }
     </script>
+    <style>
+        body {
+            background: #ACF;
+        }
+
+        select {
+            float: right;
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 1em;
+        }
+
+        textarea {
+            width: calc(100% - 10px);
+            height: 93%;
+            resize: none;
+            font: 16px "Consolas";
+            padding: 5px;
+        }
+
+        canvas, button {
+            display: block;
+            margin: auto;
+        }
+
+        canvas {
+            border: 1px solid black;
+            background: #CCC;
+        }
+
+        p {
+            font: 16px sans-serif;
+        }
+
+        .l-box {
+            padding: 1em;
+        }
+
+        .footer {
+            width: 100%;
+            height: 10%;
+            position: fixed;
+            top: 90%;
+            background: #FD5;
+            z-index: -100;
+        }
+    </style>
 </head>
 <body>
-    <div class="firstStrategy" style="float: left; width: 28%; height: 600px">
-        <select id="first" style="width: 90%; margin-bottom: 10px"></select>
-        <br>
-        <textarea id="firstText" style="width: 90%; height: 90%; resize: none"></textarea>
+    <div class="pure-g">
+        <div class="pure-u-1-2">
+            <div class="l-box">
+                <select id="first"></select>
+                <textarea id="firstText" rows="24"></textarea>
+            </div>
+        </div>
+        <div class="pure-u-1-2">
+            <div class="l-box">
+                <select id="second"></select>
+                <textarea id="secondText" rows="24"></textarea>
+            </div>
+        </div>
+        <div class="pure-u-1-3">
+            <div class="l-box">
+                <ul>
+                    <li>Write the code to control the bots.<br/>
+                    You may use some presets choosing them in combo boxes.</li>
+                    <br/>
+                    <li>Press "Start Game!" button.</li>
+                    <br/>
+                    <li>Cheer for your favourite bot! :)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="pure-u-2-3">
+            <div class="l-box">
+                <canvas id="headball" width="800px" height="600px"></canvas>
+                <br/>
+                <button onclick="startGame()">Start Game!</button>
+            </div>
+        </div>
     </div>
-    <div class="secondStrategy" style="float: left; width: 28%; height: 600px">
-        <select id="second" style="width: 90%; margin-bottom: 10px"></select>
-        <br>
-        <textarea id="secondText" style="width: 90%; height: 90%; resize: none"></textarea>
-    </div>
-    <div class="canvas" style="float: left; width: 44%">
-        <canvas id="headball" width="800" height="600" style="background: #AAA"></canvas>
-    </div>
-    <!-- <div style="clear: both"></div> -->
-    <br>
-    <button onclick="startGame()">Start game!</button>
+    <div class="footer"></div>
 
     <script>
         function render(state, canvas) {
@@ -78,10 +151,10 @@
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 42px sans-serif';
 
-                ctx.fillText('' + w.score[id], id * w.WIDTH / 2 +  w.WIDTH / 4, 20);
+                ctx.fillText('' + w.score[id], id * w.WIDTH / 2 +  w.WIDTH / 4, 25);
                 ctx.fillText('' + player.name, id * w.WIDTH / 2 +  w.WIDTH / 4, 70);
 
-                ctx.font = '12px';
+                ctx.font = 'bold 36px sans-serif';
                 ctx.fillText('' + player.touchesLeft, player.position.x, GROUND - player.position.y);
             });
 
@@ -106,12 +179,14 @@
                 if (cd === 0){
                     render(record.states[i++], canvas);
 
-                    var score = record.states[i].world.score;
-                    record.states[i - 1].world.score.forEach(function(p, i) {
-                        if (p !== score[i]) {
-                            cd = 50;
-                        }
-                    });
+                    if (i < record.states.length) {
+                        var score = record.states[i].world.score;
+                        record.states[i - 1].world.score.forEach(function(p, i) {
+                            if (p !== score[i]) {
+                                cd = 50;
+                            }
+                        });
+                    }
                 } else {
                     --cd;
                 }

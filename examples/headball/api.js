@@ -14,10 +14,44 @@ function Point(x, y) {
     this.y = y || 0;
 }
 
-Point.prototype.normalized = function() {
-    var l = Math.sqrt(this.x * this.x + this.y * this.y);
-    return new Point(this.x / l, this.y / l);
+Point.prototype.length2 = function() {
+    return this.x * this.x + this.y * this.y;
 };
+
+Point.prototype.length = function() {
+    return Math.sqrt(this.length2());
+};
+
+Point.prototype.add = function(other) {
+    return new Point(this.x + other.x, this.y + other.y);
+};
+
+Point.prototype.sub = function(other) {
+    return new Point(this.x - other.x, this.y - other.y);
+};
+
+Point.prototype.mul = function(k) {
+    return new Point(this.x * k, this.y * k);
+};
+
+Point.prototype.div = function(k) {
+    return new Point(this.x / k, this.y / k);
+};
+
+Point.prototype.normalize = function() {
+    return this.div(this.length());
+};
+
+Point.prototype.dot = function(other) {
+    return this.x * other.x + this.y * other.y;
+};
+
+Point.prototype.rotate = function(angle) {
+    var rx = this.x * Math.cos(angle) - this.y * Math.sin(angle);
+    var ry = this.x * Math.sin(angle) + this.y * Math.cos(angle);
+
+    return new Point(rx, ry);
+}
 
 function GameObject(radius, position, speed) {
     this.radius = radius || 0;
@@ -27,16 +61,15 @@ function GameObject(radius, position, speed) {
 
 GameObject.prototype.distanceTo = function(other) {
     if (other instanceof GameObject) {
-        var x = this.position.x - other.position.x;
-        var y = this.position.y - other.position.y;
-
-        return Math.sqrt(x * x + y * y);
+        return this.position.sub(other.position).length();
     }
 };
 
 GameObject.prototype.intersects = function(other) {
     if (other instanceof GameObject) {
-        return this.distanceTo(other) < this.radius + other.radius;
+        var r_sum = this.radius + other.radius;
+        var dist2 = this.position.sub(other.position).length2();
+        return dist2 < r_sum * r_sum;
     }
 };
 

@@ -20,7 +20,7 @@
                     if (xhr.status === 0 || xhr.status === 200) {
                         resolve(xhr.responseText);
                     } else {
-                        reject(new Error(xhr.status + ': ' + xhr.statusText));
+                        reject(new Error(xhr.status + ': ' + xhr.statusText + '(' + xhr.responseText + ')'));
                     }
                 }
 
@@ -52,52 +52,69 @@
             var w = state.world;
             var ctx = canvas.getContext('2d');
 
+            var GROUND = w.HEIGHT - w.PLAYER_RAIDUS;
+
             ctx.fillStyle = '#55AAFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#CC9922';
+            ctx.fillStyle = '#FFCC00';
             ctx.fillRect(0, w.HEIGHT - 2 * w.PLAYER_RAIDUS, w.WIDTH, w.HEIGHT);
 
-            w.players.forEach(function(player, id) {
-                ctx.fillStyle = id in state.offline ? 'gray' : 'green';
-                ctx.beginPath();
-                ctx.arc(player.position.x, w.HEIGHT - w.PLAYER_RAIDUS - player.position.y, player.radius, 0, 2 * Math.PI);
-                ctx.fill();
-            });
-
             var ball = w.ball;
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = '#F21';
             ctx.beginPath();
-            ctx.arc(ball.position.x, w.HEIGHT - w.PLAYER_RAIDUS - ball.position.y, ball.radius, 0, 2 * Math.PI);
+            ctx.arc(ball.position.x, GROUND - ball.position.y, ball.radius, 0, 2 * Math.PI);
             ctx.fill();
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.strokeStyle = 'black';
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 42px sans-serif';
+            w.players.forEach(function(player, id) {
+                ctx.fillStyle = state.offline.indexOf(id) === -1 ? 'green' : 'gray';
+                ctx.beginPath();
+                ctx.arc(player.position.x, GROUND - player.position.y, player.radius, 0, 2 * Math.PI);
+                ctx.fill();
 
-            ctx.fillText('' + w.score[0], w.WIDTH / 4, 20);
-            ctx.fillText('' + w.score[1], 3 * w.WIDTH / 4, 20);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // ctx.strokeStyle = 'black';
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 42px sans-serif';
 
-            ctx.fillText('' + w.players[0].name, w.WIDTH / 4, 70);
-            ctx.fillText('' + w.players[1].name, 3 * w.WIDTH / 4, 70);
+                ctx.fillText('' + w.score[id], id * w.WIDTH / 2 +  w.WIDTH / 4, 20);
+                ctx.fillText('' + player.name, id * w.WIDTH / 2 +  w.WIDTH / 4, 70);
+
+                ctx.font = '12px';
+                ctx.fillText('' + player.touchesLeft, player.position.x, GROUND - player.position.y);
+            });
 
             ctx.textBaseline = 'bottom';
             ctx.textAlign = 'right';
             ctx.font = '18px sans-serif';
+            ctx.fillStyle = 'white';
             ctx.fillText('Tick: ' + w.currentTick, w.WIDTH - 10, w.HEIGHT - 5);
         }
 
+        var _id = null;
         function gameLoop(record) {
-            var i = 0;
+            var i = 0, cd = 0;
             var canvas = document.getElementById('headball');
+
+            if (_id) cancelAnimationFrame(_id);
 
             (function _render() {
                 if (i >= record.states.length) return;
 
-                requestAnimationFrame(_render);
-                render(record.states[i++], canvas);
+                _id = requestAnimationFrame(_render);
+                if (cd === 0){
+                    render(record.states[i++], canvas);
+
+                    var score = record.states[i].world.score;
+                    record.states[i - 1].world.score.forEach(function(p, i) {
+                        if (p !== score[i]) {
+                            cd = 50;
+                        }
+                    });
+                } else {
+                    --cd;
+                }
             })();
         }
 
@@ -109,6 +126,8 @@
                 'Content-Type': 'application/json'
             }).then(function(record) {
                 gameLoop(JSON.parse(record));
+            }).catch(function(err) {
+                console.log('Failure', err);
             });
         }
 

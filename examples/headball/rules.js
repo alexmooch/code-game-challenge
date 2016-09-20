@@ -5,14 +5,83 @@ function clamp(value, min, max) {
     return value < min ? min : (value > max ? max : value);
 }
 
-var globals = {
-    HB: API,
+function resolveCollision(player, ball) {
+    const RESTITUTION = 0.35;
+
+    d = ball.position.sub(player.position);
+    distance_squared = d.dot(d);
+
+    radii_sum = player.radius + ball.radius;
+    radii_sum_squared = radii_sum * radii_sum;
+
+    if (distance_squared > radii_sum_squared) {
+        // too far away
+        return false;
+    }
+
+    distance = Math.sqrt(distance_squared);
+    normal = d.div(distance); // ncoll
+    penetration = radii_sum - distance; // dcoll
+
+    // imp = 0;
+    // imb = 1;
+
+    // separation_vec = normal.mul(penetration / (imp + imb));
+    separation_vec = normal.mul(penetration);
+
+    // player.position = player.position.sub(separation_vec * imp);
+    // ball.position = ball.position.add(separation_vec * imb);
+    ball.position = ball.position.add(separation_vec);
+
+    combined_velocity = ball.speed.sub(player.speed); // vcoll
+    impact_speed = combined_velocity.dot(normal); // vn
+
+    if (impact_speed > 0) {
+        // moving away, collide but not reflect velocity
+        return true;
+    }
+
+    // impulse = -(1 + RESTITUTION) * impact_speed / (imp + imb);
+    impulse = -(1 + RESTITUTION) * impact_speed;
+    impulse_vector = normal.mul(impulse);
+
+    // a bit of randomnnes ;)
+    impulse_vector = impulse_vector.rotate(Math.random() * Math.PI / 180);
+
+    // player.speed = player.speed.sub(impulse_vector * imp);
+    // ball.speed = ball.speed.add(impulse_vector * imb);
+    ball.speed = ball.speed.add(impulse_vector);
+
+    return true;
 }
 
 var rules = new CGC.Rules();
 
 rules.getAPI = function() {
-    return globals;
+    return API;
+}
+
+function endRound(world, winner) {
+    var w = world;
+    var ball = w.ball;
+
+    ++w.score[winner];
+
+    ball.position = new API.Point(
+        w.WIDTH / 4 + (1 - winner) * w.WIDTH / 2,
+        w.HEIGHT / 2
+    );
+    ball.speed = new API.Point();
+    ball.freeze_time = w.BALL_FREEZE_TIME;
+
+    w.players.forEach(function(player, id) {
+        player.position = new API.Point(
+            w.WIDTH / 4 + id * w.WIDTH / 2,
+            player.radius
+        );
+        player.speed = new API.Point();
+        player.touchesLeft = w.MAX_TOUCHES;
+    });
 }
 
 rules.initWorld = function(world) {
@@ -23,8 +92,9 @@ rules.initWorld = function(world) {
     world.BALL_RAIDUS = 50;
     world.BALL_FREEZE_TIME = 100;
     world.PLAYER_RAIDUS = 30;
+    world.MAX_TOUCHES = 2;
 
-    world.currentTick = 0;
+    world.currentTick = 1;
 
     world.players = [];
     world.score = [0, 0];
@@ -47,6 +117,7 @@ rules.initPlayer = function(world, playerID, name) {
             world.PLAYER_RAIDUS
         )
     );
+    world.players[playerID].touchesLeft = world.MAX_TOUCHES;
     world.players[playerID].name = typeof name === 'string' ? name :
         'Bot #' + (playerID + 1);
 }
@@ -68,11 +139,16 @@ rules.movePlayer = function(world, playerID, intent) {
 rules.updateWorld = function(world) {
     var w = world;
 
-    const GRAVITY = 0.3;
+    if (typeof rules.winner !== 'undefined') {
+        endRound(w, rules.winner);
+        delete rules.winner;
+        return;
+    }
+
+    const GRAVITY = 0.4;
     const AIR_RESISTANCE = 0.02;
-    const SPEED_LOSS = 0.1;
-    const COLLISION_POWER = 2;
-    const SPEED_KOEFF = 3;
+    const SPEED_LOSS = 0.5;
+    const SPEED_KOEFF = 4;
 
     ++w.currentTick;
 
@@ -98,6 +174,7 @@ rules.updateWorld = function(world) {
 
         player.speed.y -= GRAVITY;
         player.speed.x *= (1 - AIR_RESISTANCE);
+        player.speed.y *= (1 - AIR_RESISTANCE);
     });
 
     // Update ball
@@ -123,24 +200,7 @@ rules.updateWorld = function(world) {
         // ball.position.y = y;
 
         if (ball.position.y < ball.radius) {
-            var winner = ball.position.x > w.WIDTH / 2 ? 0 : 1;
-
-            ++w.score[winner];
-
-            ball.position = new API.Point(
-                w.WIDTH / 4 + (1 - winner) * w.WIDTH / 2,
-                w.HEIGHT / 2
-            );
-            ball.speed = new API.Point();
-            ball.freeze_time = w.BALL_FREEZE_TIME;
-
-            w.players.forEach(function(player, id) {
-                player.position = new API.Point(
-                    w.WIDTH / 4 + id * w.WIDTH / 2,
-                    player.radius
-                );
-                player.speed = new API.Point();
-            });
+            return endRound(w, ball.position.x > w.WIDTH / 2 ? 0 : 1);
         }
 
         ball.speed.y -= GRAVITY;
@@ -150,37 +210,11 @@ rules.updateWorld = function(world) {
     // Check collisions
 
     w.players.forEach(function(player, id) {
-        var distance = player.distanceTo(ball);
-        var min_dist = player.radius + ball.radius;
-
-        if (distance < min_dist) {
-            ball.freeze_time = 0;
-
-            var k = (min_dist - distance) * COLLISION_POWER;
-            var ds = new API.Point(
-                ball.position.x - player.position.x,
-                ball.position.y - player.position.y
-            ).normalized();
-
-            // a bit randomness
-            var angle = Math.random() * Math.PI / 180;
-            var rx = ds.x * Math.cos(angle) - ds.y * Math.sin(angle);
-            var ry = ds.x * Math.sin(angle) + ds.y * Math.cos(angle);
-            ds.x = rx;
-            ds.y = ry;
-
-            ball.speed.x += ds.x * k;
-            ball.speed.y += ds.y * k;
-
-            ball.speed.x *= (1 - SPEED_LOSS);
-            ball.speed.y *= (1 - SPEED_LOSS);
-
-            // move ball away
-
-            ball.position = new API.Point(
-                player.position.x + ds.x * min_dist,
-                player.position.y + ds.y * min_dist
-            );
+        if (resolveCollision(player, ball)) {
+            if (--player.touchesLeft < 0) {
+                rules.winner = 1 - id;
+            }
+            w.players[1 - id].touchesLeft = w.MAX_TOUCHES;
         }
     });
 }

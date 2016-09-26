@@ -1,8 +1,7 @@
 const CGC = require('../../cgc');
-const rules = require('./rules');
 
 module.exports = function(strategies, opts) {
-    var game = new CGC.Game(rules);
+    var game = new CGC.Game(require('./rules'));
 
     var bots = game.bots;
     var err = null;

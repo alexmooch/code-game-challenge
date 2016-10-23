@@ -22,12 +22,13 @@ var game_record = game.run({ ticks: 4000 });
 /*
     game_record = {
         states: [ {
-            world: object,
-            offline: [ bot_id, ... ]
+            world: Object,
+            offline: [ bot_id, ... ] // [Boolean]
         }, ... ],
-        result = rules.getResult(world)
+        result = rules.getResult(world),
     };
 */
 ```
 Complete *Rock-Paper-Scissors* example see under examples/rps/game.js
+
 More complex usage for volleyball-like game *Headball* see under examples/headball/

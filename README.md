@@ -30,3 +30,4 @@ var game_record = game.run({ ticks: 4000 });
 */
 ```
 Complete *Rock-Paper-Scissors* example see under examples/rps/game.js
+More complex usage for volleyball-like game *Headball* see under examples/headball/

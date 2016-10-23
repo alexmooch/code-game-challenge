@@ -17,10 +17,8 @@
   },
   "homepage": "https://github.com/alexmooch/code-game-challenge#readme",
   "dependencies": {
-    "clone": "^1.0.2"
-  },
-  "optionalDependencies": {
+    "clone": "^1.0.2",
     "body-parser": "^1.15.2",
     "express": "^4.14.0"
-  }
+  },
 }

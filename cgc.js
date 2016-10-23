@@ -237,12 +237,7 @@ Game.prototype.run = function (options) {
         game.tick(world, shuffle_bots);
         record.states.push({
             world: clone(world),
-            offline: game.bots.reduce(function(offline, bot) {
-                if (typeof bot.strategy.last_error !== 'undefined') {
-                    offline.push(bot.id);
-                }
-                return offline;
-            }, []),
+            offline: game.bots.map(bot => !!bot.strategy.last_error),
         });
     }
 

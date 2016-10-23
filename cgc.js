@@ -137,7 +137,6 @@ VMStrategyRunner.prototype._run = function (code, API, world, timeout) {
         }) || {};
     } catch (e) {
         this.last_error = e;
-        // return;
     }
 }
 
@@ -155,9 +154,7 @@ VMStrategyRunner.prototype.move = function (world, API, timeout) {
 ///////////////////////////////////////////////////////////////////////////////
 
 
-function Game(rules, RunnerClass) {
-    this.Runner = RunnerClass || typeof VMStrategyRunner !== 'undefined' ?
-        VMStrategyRunner : StrategyRunner;
+function Game(rules) {
     this.timeouts = {
         compile:    1000,
         init:       500,
@@ -168,8 +165,9 @@ function Game(rules, RunnerClass) {
     this.bots = [];
 }
 
-Game.prototype.addStrategy = function (strategy_code, id) {
-    var Runner = this.Runner;
+Game.prototype.addStrategy = function (strategy_code, id, RunnerClass) {
+    const Runner = RunnerClass || typeof VMStrategyRunner !== 'undefined' ?
+        VMStrategyRunner : StrategyRunner;
     var strategy = new Runner(strategy_code, this.timeouts.compile);
 
     id = typeof id !== 'undefined' ? id : this.bots.length;

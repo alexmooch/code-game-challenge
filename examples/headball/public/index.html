@@ -88,13 +88,17 @@
     <div class="pure-g">
         <div class="pure-u-1-2">
             <div class="l-box">
-                <select id="first"></select>
+                <select id="first">
+                    <optgroup label="Strategy Template">
+                </select>
                 <textarea id="firstText" rows="24"></textarea>
             </div>
         </div>
         <div class="pure-u-1-2">
             <div class="l-box">
-                <select id="second"></select>
+                <select id="second">
+                    <optgroup label="Strategy Template">
+                </select>
                 <textarea id="secondText" rows="24"></textarea>
             </div>
         </div>
@@ -243,7 +247,7 @@
             updateText(second);
         }, false);
 
-        ['Empty', 'Jump', 'Basic'].forEach(function(name, id) {
+        ['Empty', 'Easy', 'Medium'].forEach(function(name, id) {
             ajax('/strategy/' + name.toLowerCase()).then(function(strategy) {
                 strategies[name] = strategy;
 

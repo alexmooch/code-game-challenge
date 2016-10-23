@@ -2,18 +2,27 @@
 
 var Strategy = {
     init: function() {
-        return 'Jump Bot';
+        return 'Hard Bot';
     },
     move: function(world) {
         var me = world.players[world.myID];
         var ball = world.ball;
 
-        var decision = Action.NONE;
-        if (me.position.x + me.radius > ball.position.x - ball.radius &&
-        me.position.x - me.radius < ball.position.x + ball.radius) {
-            decision = Action.JUMP;
+        var dist = ball.position.x - me.position.x;
+        dist += (world.myID ? 1 : -1) * 0.95 * me.radius;
+
+        if ((world.myID === 0) ===  (ball.position.x > world.WIDTH / 2)) {
+            var k = 0.35,
+                a = world.WIDTH * (1 - k) / 2,
+                b = k * world.WIDTH;
+            dist = a + b * world.myID - me.position.x;
         }
 
-        return new Decision(decision);
+        var decision = new Decision(Action.MOVE, dist);
+        if (me.distanceTo(ball) < 2.05 * ball.radius) {
+            decision.action = Action.JUMP;
+        }
+
+        return decision;
     }
 };

@@ -247,7 +247,7 @@
             updateText(second);
         }, false);
 
-        ['Empty', 'Easy', 'Medium'].forEach(function(name, id) {
+        ['Empty', 'Easy', 'Medium', 'Hard'].forEach(function(name, id) {
             ajax('/strategy/' + name.toLowerCase()).then(function(strategy) {
                 strategies[name] = strategy;
 
